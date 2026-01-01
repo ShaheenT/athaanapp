@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EiX-piware Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #10b981, #059669);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .section {
+            margin: 30px 0;
+        }
+
+        .section h2 {
+            color: #374151;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .wifi-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .wifi-item {
+            padding: 15px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wifi-item:hover {
+            background: #f9fafb;
+        }
+
+        .wifi-item:last-child {
+            border-bottom: none;
+        }
+
+        .wifi-item.selected {
+            background: #ecfdf5;
+            border-color: #10b981;
+        }
+
+        .wifi-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wifi-ssid {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .wifi-details {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .signal-strength {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .signal-excellent {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .signal-good {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .signal-poor {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <div class="logo-icon">☪</div>
+            <h1>EiX-piware</h1>
+            <p class="subtitle">Athaan Fi Beit Device Setup</p>
+        </div>
+
+        <div id="status-section" class="section">
+            <div id="status-indicator" class="status warning">
+                Checking device status...
+            </div>
+        </div>
+
+        <div id="wifi-section" class="section">
+            <h2>WiFi Configuration</h2>
+            
+            <button id="scan-btn" onclick="scanWiFi()">
+                <span id="scan-loading" class="loading hidden"></span>
+                Scan for Networks
+            </button>
+
+            <div id="wifi-list" class="wifi-list hidden"></div>
+
+            <div id="wifi-form" class="hidden">
+                <div class="form-group">
+                    <label for="selected-ssid">Network Name (SSID)</label>
+                    <input type="text" id="selected-ssid" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter WiFi password">
+                </div>
+
+                <button id="connect-btn" onclick="connectWiFi()">
+                    <span id="connect-loading" class="loading hidden"></span>
+                    Connect to Network
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedNetwork = null;
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                const statusEl = document.getElementById('status-indicator');
+                
+                if (data.status === 'ready') {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Device is ready and connected';
+                } else if (data.status === 'error') {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '❌ Device has issues - check connections';
+                } else {
+                    statusEl.className = 'status warning';
+                    statusEl.textContent = '⚠️ Device is initializing...';
+                }
+            } catch (error) {
+                console.error('Failed to check status:', error);
+            }
+        }
+
+        async function scanWiFi() {
+            const scanBtn = document.getElementById('scan-btn');
+            const loadingEl = document.getElementById('scan-loading');
+            const wifiListEl = document.getElementById('wifi-list');
+            
+            scanBtn.disabled = true;
+            loadingEl.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/wifi/scan');
+                const data = await response.json();
+                
+                displayWiFiNetworks(data.networks);
+                wifiListEl.classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('WiFi scan failed:', error);
+                alert('Failed to scan for networks. Please try again.');
+            } finally {
+                scanBtn.disabled = false;
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        function displayWiFiNetworks(networks) {
+            const wifiListEl = document.getElementById('wifi-list');
+            
+            wifiListEl.innerHTML = networks.map(network => {
+                const signalClass = getSignalClass(network.signal_level);
+                const signalText = getSignalText(network.signal_level);
+                
+                return `
+                    <div class="wifi-item" onclick="selectNetwork('${network.ssid}')">
+                        <div class="wifi-info">
+                            <div class="wifi-ssid">${network.ssid}</div>
+                            <div class="wifi-details">${network.security || 'Open'}</div>
+                        </div>
+                        <div class="signal-strength ${signalClass}">${signalText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getSignalClass(signalLevel) {
+            if (signalLevel > -50) return 'signal-excellent';
+            if (signalLevel > -70) return 'signal-good';
+            return 'signal-poor';
+        }
+
+        function getSignalText(signalLevel) {
+            if (signalLevel > -50) return 'Excellent';
+            if (signalLevel > -70) return 'Good';
+            return 'Poor';
+        }
+
+        function selectNetwork(ssid) {
+            selectedNetwork = ssid;
+            
+            // Update UI
+            document.querySelectorAll('.wifi-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            event.currentTarget.classList.add('selected');
+            
+            // Show form
+            document.getElementById('selected-ssid').value = ssid;
+            document.getElementById('wifi-form').classList.remove('hidden');
+        }
+
+        async function connectWiFi() {
+            if (!selectedNetwork) {
+                alert('Please select a network first');
+                return;
+            }
+
+            const password = document.getElementById('password').value;
+            const connectBtn = document.getElementById('connect-btn');
+            const loadingEl = document.getElementById('connect-loading');
+            
+            connectBtn.disabled = true;
+            loadingEl.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/api/wifi/connect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ssid: selectedNetwork,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Successfully connected to WiFi!');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    alert('Failed to connect: ' + (data.error || 'Unknown error'));
+                }
+                
+            } catch (error) {
+                console.error('Connection failed:', error);
+                alert('Failed to connect to network. Please try again.');
+            } finally {
+                connectBtn.disabled = false;
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        // Initial status check
+        checkStatus();
+        
+        // Refresh status every 10 seconds
+        setInterval(checkStatus, 10000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "eix-piware",
+  "version": "1.0.0",
+  "description": "Athaan Fi Beit - Raspberry Pi Device Software",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "install-service": "sudo cp eix-piware.service /etc/systemd/system/ && sudo systemctl enable eix-piware && sudo systemctl daemon-reload",
+    "wifi-scan": "node src/wifi-manager.js scan",
+    "wifi-connect": "node src/wifi-manager.js connect"
+  },
+  "dependencies": {
+    "ws": "^8.14.2",
+    "node-wifi": "^2.0.15",
+    "speaker": "^0.5.4",
+    "node-cron": "^3.0.3",
+    "systeminformation": "^5.21.22",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "keywords": ["raspberry-pi", "athaan", "islamic", "prayer-times", "iot"],
+  "author": "Athaan Fi Beit",
+  "license": "MIT"
+}

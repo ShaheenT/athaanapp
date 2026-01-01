@@ -1,0 +1,316 @@
+The application is called Athaan Fi Beit, here is background to give you a better overview and understanding. == Background
+
+The client aims to deliver a spiritually enriching and technically seamless experience by enabling users to hear the Islamic Call to Prayer (Athaan) within their homes five times daily. This will be achieved via a flush ceiling-mounted speaker system connected to a Raspberry Pi 5 device with internet access.
+
+The Raspberry Pi device will be responsible for calculating prayer times based on the user's geographic location or accepting manual time entries from the admin. At each designated prayer time, the device will trigger audio playback through the connected speaker system.
+
+This application serves three primary user groups:
+
+Admin – Manages global prayer time configurations (manual upload or location-based calculation), system settings, and user accounts through a web-based dashboard.
+Customer – Receives Athaan audio automatically at the correct times without manual intervention.
+Technician – Responsible for physical installation and setup of the speaker and Raspberry Pi 5 device at the customer’s premises.
+This system combines religious tradition with modern IoT and cloud integration to create a consistent and automated Athaan delivery mechanism within homes. - == Requirements
+
+The system requirements are prioritized using the MoSCoW framework to guide the Minimum Viable Product (MVP) development and subsequent iterations.
+
+=== Must Have
+
+Automatic Athaan audio playback at the five daily prayer times.
+Raspberry Pi 5 device receives updated prayer times via the internet from the Admin Dashboard.
+Admin Panel to:
+Upload/manage prayer times manually.
+View and manage registered user profiles, including:
+** Membership ID
+** Account details
+** Device ID of Raspberry Pi
+** Home address and mobile number
+** Bank details for debit processing
+Customer has a web-based Progressive Web App (PWA) to:
+Register and create user account
+Log in and view payment reminders
+Adjust volume of Athaan playback
+Mobile notifications/reminders for upcoming prayer times.
+Technician setup workflow:
+Connect ceiling speaker to Raspberry Pi
+Install Pi OS on the device
+Configure user’s WiFi SSID/password
+Mark device as installed and record its location
+On boot, Raspberry Pi must auto-start a script that:
+Connects to the Admin Dashboard
+Updates status to “online” with a green indicator
+Geo-location-based prayer time calculation on Raspberry Pi.
+Audio file configuration: different voices/styles of Athaan selectable.
+Heartbeat/health-check from Pi to cloud dashboard to confirm it’s online.
+Admin Dashboard includes device status (last seen, online/offline, volume level).
+Remote volume control via Admin Dashboard.
+Multilingual support for both admin and customer-facing interfaces.
+Fallback to offline mode: Athaan should still play based on locally cached times if disconnected from internet.
+Minimal in-app billing functionality for account debit or payment tracking.
+=== Should Have
+(None at this time)
+
+=== Could Have
+(None at this time)
+
+=== Won’t Have
+(None at this time)
+== Method
+
+=== System Architecture Overview
+
+The solution is built around three key user-facing components and a centralized backend.
+
+[plantuml]
+@startuml
+actor Admin
+actor Customer
+actor Technician
+rectangle "Admin Web Dashboard\n(React + Next.js)" {
+Admin --> (Manage Users)
+Admin --> (Upload Prayer Times)
+Admin --> (Monitor Devices)
+}
+
+rectangle "Customer Web App (PWA)\n(React + Next.js)" {
+Customer --> (Register / Login)
+Customer --> (Set Volume)
+Customer --> (Receive Prayer Alerts)
+}
+
+rectangle "Raspberry Pi 5\n(Local Linux Device)" {
+Technician --> (Install Device)
+(Prayer Playback Engine) --> (Speaker)
+(Boot Script) --> (Cloud API)
+}
+
+rectangle "Backend API\n(Node.js + Express)" {
+(Cloud API) --> (MongoDB/PostgreSQL)
+(Customer Web App) --> (User API)
+(Admin Dashboard) --> (Admin API)
+(Pi Device) --> (Device API)
+}
+database "Database\n(MongoDB or PostgreSQL)" {
+} - rectangle "Cloud Services" {
+(Storage - AWS S3 / Firebase) --> (Audio Files)
+(Notifications - FCM / OneSignal) --> (Push Alerts)
+(Payments - [To be Decided]) --> (Debit Orders)
+}
+@enduml
+=== Component Breakdown
+
+Frontend – Admin Panel
+
+Stack: React.js + Next.js, Chakra UI
+Features:
+Login (Admin-only)
+View all registered users and devices
+Upload CSV of prayer times
+Live status dashboard
+Manual volume control per device
+Add/edit/delete audio profiles
+Frontend – Customer Web App (PWA)
+
+Stack: React.js + Next.js, Chakra UI
+Features:
+Account registration and login
+Audio volume controls
+Payment/reminder notifications
+PWA installable via browser
+Backend API
+
+Stack: Node.js + Express.js
+Modules:
+Auth: Firebase Auth or Auth0
+User & device management endpoints
+Heartbeat/online checks from Pi
+Notification dispatch
+Audio schedule delivery
+Database
+
+MongoDB or PostgreSQL (based on scale and structure needs)
+Stores:
+User profiles
+Device data
+Prayer times (per region or geo)
+Audio file references
+Payment/subscription status
+Raspberry Pi 5 (Edge Device)
+
+Runs a boot-time Node.js script or Python daemon:
+Auto-connects to backend
+Fetches updated prayer schedule/audio files
+Plays Athaan using pre-downloaded audio
+Sends heartbeat every 5 min
+Reads volume setting from API
+Cloud Services
+
+Audio Storage: AWS S3, Firebase Storage, or DigitalOcean Spaces
+Push Notifications: Firebase Cloud Messaging or OneSignal
+SMS Alerts (Optional): Twilio
+Payment Integration: (Still needs selection — see below)
+=== Payment System Suggestion for South African Market
+Recommended: PayFast
+
+Popular in South Africa, supports card and EFT payments.
+Well-documented REST API
+Supports recurring payments/subscriptions
+Alternative: Peach Payments (also reputable and supports debit orders)
+
+We'll proceed with MongoDB for its flexibility in user/device data modeling.
+
+Prayer times will be manual by default, with an optional toggle to enable automated calculation using the Aladhan API or a local astronomical method on the Pi
+=== Database Schema (MongoDB)
+
+Collections and key fields below are structured for scalability and device-user linkage.
+
+==== users
+
+_id: ObjectId
+membership_id: String
+email: String
+password_hash: String
+full_name: String
+mobile_number: String
+home_address: String
+language: String (e.g., 'en', 'ar')
+bank_details: Object
+account_number: String
+bank_name: String
+subscription_status: String ('active', 'inactive')
+registered_device_id: ObjectId (ref -> devices)
+==== devices
+_id: ObjectId
+serial_number: String (unique hardware ID)
+user_id: ObjectId (ref -> users)
+wifi_ssid: String
+location: { lat: Number, lng: Number }
+volume_level: Number (0–100)
+is_online: Boolean
+last_seen: ISODate
+prayer_time_source: String ('manual' | 'api' | 'local_calc')
+installed_by: ObjectId (ref -> technicians)-==== prayer_times
+_id: ObjectId
+date: Date (daily)
+location_hash: String (lat,lng grid)
+fajr: String
+dhuhr: String
+asr: String
+maghrib: String
+isha: String
+source: String ('manual', 'aladhan', 'local_calc')
+==== audio_profiles
+
+_id: ObjectId
+name: String (e.g., “Makkah Male Voice 1”)
+file_url: String (S3 or Firebase)
+duration_sec: Number
+language: String
+==== technicians
+
+_id: ObjectId
+full_name: String
+email: String
+assigned_devices: [ObjectId]
+==== logs
+
+_id: ObjectId
+device_id: ObjectId
+event_type: String ('boot', 'play', 'offline', 'heartbeat')
+timestamp: ISODate
+details: Object
+=== Prayer Time Calculation Logic
+The Admin dashboard allows selecting the method of prayer time management:
+
+.Option 1: Manual (Default)
+
+Admin uploads CSV or uses form to enter daily prayer times.
+Times are saved into the prayer_times collection.
+Devices pull the next 24h schedule on boot or midnight.
+.Option 2: API-Based (Aladhan API)
+
+Admin enables the API method in the dashboard.
+Device sends its location to backend.
+Backend queries Aladhan with lat/lng.
+Resulting times cached into prayer_times.
+.Option 3: Local Calculation (On Raspberry Pi)
+
+Uses preloaded libraries like prayer-times-calculator in Python or Node.js.
+Raspberry Pi uses stored coordinates and calc method (e.g., ISNA, MWL).
+Fallback option when no internet or API limit is hit.
+Each Pi fetches the schedule daily at midnight and caches it locally in JSON.
+
+A systemd service ensures a Node.js script runs at boot to:
+
+Sync with backend (update status)
+Download current day’s prayer times
+Schedule Athaan audio with at or cron jobs
+Play local audio files with omxplayer or similar
+== Implementation
+This section outlines the phased development tasks to build and deploy the application, with each component clearly scoped to support modular, parallel execution.
+
+=== Phase 1: Project Setup & Planning
+
+ Create private GitHub repo with structured monorepo layout.
+ Define .env files and environment variable schema.
+ Provision Firebase (or Auth0) for auth services.
+ Set up MongoDB Atlas and initial collections based on schema.
+ Set up AWS S3 (or Firebase Storage) for audio files.
+ Select and integrate payment provider (e.g., PayFast).
+=== Phase 2: Admin Dashboard
+
+ Scaffold React + Next.js app with Chakra UI.
+ Implement secure admin login.
+ User management view: list, edit, delete user profiles.
+ Device management view: live status, last seen, location, volume.
+ Prayer time upload UI (CSV or form-based).
+ Toggle between manual/API-based/local calculation.
+ Volume control interface per device.
+ Audio profile manager: upload and assign Athaan voices.
+=== Phase 3: Customer Web App (PWA)
+ Scaffold PWA with React + Next.js + Chakra UI.
+ Register/login UI (via Firebase/Auth0).
+ Payment status dashboard & reminders.
+ Volume control slider synced to backend.
+ Push notification subscription via FCM or OneSignal.
+ Language selector (multilingual support).
+=== Phase 4: Backend API (Node.js + Express)
+
+ Setup API project with authentication middleware.
+ CRUD endpoints for users, devices, prayer_times.
+ Endpoints for Pi devices:
+Heartbeat ping
+Get schedule
+Get volume/audio config
+ Endpoint for admin to control volume or assign profiles.
+ Integrate payment webhook receiver (e.g., PayFast).
+=== Phase 5: Raspberry Pi Software
+
+ Base image with Debian + Node.js + systemd.
+ Boot-time service to:
+Connect to backend
+Fetch and cache schedule
+Schedule playback jobs
+ Playback daemon: plays Athaan using local audio files.
+ Health ping every 5 minutes.
+ WiFi setup utility for technician installation.
+=== Phase 6: Audio Management
+
+ Collect licensed Athaan recordings.
+ Normalize volume and format (e.g., MP3 128kbps).
+ Upload to S3 or Firebase Storage.
+ Map profiles in admin dashboard.
+=== Phase 7: Notifications
+ FCM/OneSignal integration in backend and PWA.
+ Prayer time alerts (configurable lead time).
+ Optional SMS setup with Twilio (if required).
+=== Phase 8: Testing & QA
+
+ Unit tests (Jest or Mocha) for backend logic.
+ Integration testing for device ↔ cloud ↔ UI communication.
+ Manual tests for multilingual flows and fallback scenarios.
+=== Phase 9: Deployment
+
+ Host frontend apps (Vercel or Netlify).
+ Deploy backend (Render, Heroku, or VPS).
+ Secure domains and SSL.
+ Publish base Pi image for technician flash.

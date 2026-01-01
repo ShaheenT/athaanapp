@@ -1,0 +1,14 @@
+When I go to the demo dashboard , and I click any of the page links for example Users, devices , prayer times I get 404 Error- Did you forget to add the page to the router? its not working and I need working pages for each tab that works 100% I want to test them on my local machine and see them working as requested with dummy data for now , I want you to confirm with me that you have migrated everything over to MongoDB and that everything is working 100%. I also need final checks. I need working pages for each tab that works 100% I want to test them on my local machine and see them working as requested with dummy data for now , I want you to confirm with me that you have migrated everything over to MongoDB and that everything is working 100%. I also need final checks. like transgo admin login works , the login successful popup modal is good, then when I get to admin dashboard , I see Task Management link opens page and all the other pages open , question do they function correctly as per scope , next question I need to know how to link all these page to pull real-time data when we do testing and when I need to go live to production after QA testing .Please generate a complete environment setup and deployment procedure document for a software, web, or mobile application project. The document should cover all the following stages clearly: development, staging/QA, UAT, and production deployment. It must also explain how to connect the app to real-time data services and how to prepare the app for client testing and access.
+Make sure the process includes: tools needed, environment variables, database setup, testing steps, CI/CD integration (preferably GitHub Actions), and platform-specific deployment (e.g., Firebase, Vercel, App Store, etc.)."
+
+"In addition, generate the following supporting files and assets:
+
+A formatted deployment document (Word & PDF)
+
+Example .env.staging and .env.production files
+
+A scaffolded folder structure for a typical full-stack or mobile app project
+
+A CI/CD pipeline config using GitHub Actions for deployment to staging and production
+
+Two separate setup instructions — one for Intel MacBook and one for MacBook M2/M3 architectures, including all relevant terminal commands, Node.js setup, and emulators (e.g., for Firebase, MongoDB)._

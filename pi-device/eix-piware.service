@@ -1,0 +1,31 @@
+[Unit]
+Description=EiX-piware - Athaan Fi Beit Device Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/eix-piware
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=DASHBOARD_URL=wss://your-dashboard-url.com/ws
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=eix-piware
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/pi/eix-piware
+ReadWritePaths=/etc/eix-piware
+
+[Install]
+WantedBy=multi-user.target
