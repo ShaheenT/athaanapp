@@ -1,0 +1,32 @@
+# System
+.DS_Store
+
+# Dependencies
+node_modules
+
+# Env
+.env
+.env.*
+
+# Build outputs
+dist
+build
+
+# Vite
+vite.config.ts.*
+
+# Archives
+*.zip
+*.tgz
+*.tar.gz
+
+# Database binaries
+mongodb-*
+mongod
+mongos
+
+# Desktop junk accidentally dragged in
+Desktop/
+
+# Firebase secret (never commit)
+config/firebaseServiceAccount.json
